@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, ChefHat, Truck, CheckCircle2, Search, Filter, Clock } from "lucide-react";
 import api, { API_URL } from "../api";
@@ -56,7 +57,8 @@ export default function AdminOrders() {
           orderId, status: newStatus, userId: res.data.userId
         });
       }
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       alert("Failed to update status");
     }
   };
@@ -128,7 +130,7 @@ export default function AdminOrders() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <AnimatePresence>
-              {displayedOrders.map((order, index) => {
+              {displayedOrders.map((order) => {
                 const config = getStatusConfig(order.orderStatus);
                 
                 return (

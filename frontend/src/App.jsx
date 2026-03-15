@@ -13,18 +13,19 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminInventory from "./pages/AdminInventory";
 import Payment from "./pages/Payment";
 
+const getUser = () => JSON.parse(localStorage.getItem("user") || "null");
+
+const ProtectedRoute = ({ children }) => {
+  const user = getUser();
+  return user ? children : <Navigate to="/" />;
+};
+
+const AdminRoute = ({ children }) => {
+  const user = getUser();
+  return user?.isAdmin ? children : <Navigate to="/" />;
+};
+
 function App() {
-  const getUser = () => JSON.parse(localStorage.getItem("user") || "null");
-
-  const ProtectedRoute = ({ children }) => {
-    const user = getUser();
-    return user ? children : <Navigate to="/" />;
-  };
-
-  const AdminRoute = ({ children }) => {
-    const user = getUser();
-    return user?.isAdmin ? children : <Navigate to="/" />;
-  };
 
   return (
     <BrowserRouter>

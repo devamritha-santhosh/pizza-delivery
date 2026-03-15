@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { Package, ChefHat, Truck, CheckCircle2, XCircle, Clock, ArrowLeft, RotateCcw } from "lucide-react";
 import api, { API_URL } from "../api";
@@ -8,13 +9,11 @@ import { io } from "socket.io-client";
 export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [socket, setSocket] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const socketUrl = API_URL.replace(/\/api$/, "");
     const newSocket = io(socketUrl);
-    setSocket(newSocket);
 
     const user = JSON.parse(localStorage.getItem("user") || "{}");
     if (user.id) {

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Check, CheckCircle2, ChevronRight, Receipt } from "lucide-react";
 

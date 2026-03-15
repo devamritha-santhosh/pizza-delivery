@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion } from "framer-motion";
 import { ArrowLeft, RefreshCw, AlertTriangle, DatabaseZap, RotateCcw } from "lucide-react";
 import api from "../api";
@@ -16,7 +17,8 @@ export default function AdminInventory() {
       const res = await api.get("/admin/init");
       setInventory(res.data.inventory);
       setError(null);
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       setError("Failed to initialize inventory");
     } finally {
       setLoading(false);
@@ -30,7 +32,8 @@ export default function AdminInventory() {
       const res = await api.get("/admin/reset-inventory");
       setInventory(res.data.inventory);
       setError(null);
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       setError("Failed to reset inventory");
     } finally {
       setLoading(false);
@@ -43,8 +46,9 @@ export default function AdminInventory() {
       setError(null);
       const res = await api.get("/inventory");
       setInventory(res.data.inventory || res.data);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to fetch inventory");
+    } catch (error) {
+      console.error(error);
+      setError(error.response?.data?.message || "Failed to fetch inventory");
       setInventory(null);
     } finally {
       setLoading(false);
@@ -59,7 +63,8 @@ export default function AdminInventory() {
     try {
       await api.put("/inventory", { category, name, quantity: Number(newStock) });
       fetchInventory(); // Soft refresh
-    } catch (err) {
+    } catch (error) {
+      console.error(error);
       alert("Failed to update stock");
     }
   };

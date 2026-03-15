@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+// eslint-disable-next-line no-unused-vars
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, ShoppingCart, User, LogOut, Star, ChefHat, Sparkles, Pizza } from "lucide-react";
 import { API_URL } from "../api";
