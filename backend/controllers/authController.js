@@ -1,103 +1,94 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const { 
+const {
   sendVerificationEmail,
-  sendResetPasswordEmail 
+  sendResetPasswordEmail
 } = require("../utils/mailer.js");
 // ---------------- Registration ----------------
 exports.register = async (req, res) => {
-    const { name, email, password, isAdmin } = req.body;
+  const { name, email, password } = req.body; // remove isAdmin from frontend
 
-    try {
-        // Basic validation
-        if (!name || !email || !password) {
-            return res.status(400).json({ message: "All fields are required" });
-        }
-        if (password.length < 6) {
-            return res.status(400).json({ message: "Password must be at least 6 characters long" });
-        }
-
-        // Check if user exists
-        if (await User.findOne({ email })) 
-            return res.status(400).json({ message: "User already exists" });
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await User.create({
-            name,
-            email,
-            password: hashedPassword,
-            isAdmin,
-            isVerified: false // initially false
-        });
-
-        // Generate email verification token
-        const verificationToken = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "1d" }
-        );
-
-        // Send verification email
-        const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-        const verificationLink = `${frontendUrl}/verify/${verificationToken}`;
-        await sendVerificationEmail(user.email, verificationLink);
-
-        res.status(201).json({
-            message: "Registered successfully. Check your email to verify your account.",
-            verificationLink: verificationLink // For testing purposes
-        });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+  try {
+    // Basic validation
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: "All fields are required" });
     }
-};
+    if (password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters long" });
+    }
 
+    // Check if user exists
+    if (await User.findOne({ email }))
+      return res.status(400).json({ message: "User already exists" });
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // ⚡ ALWAYS enforce isAdmin: false
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      isAdmin: false, // 👈 key change
+      isVerified: false // initially false
+    });
+
+    // Generate email verification token
+    const verificationToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    // Send verification email
+    const verificationLink = `http://localhost:5173/verify/${verificationToken}`;
+    await sendVerificationEmail(user.email, verificationLink);
+
+    res.status(201).json({
+      message: "Registered successfully. Check your email to verify your account.",
+      verificationLink // For testing
+    });
+
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
 // ---------------- Login ----------------
 exports.login = async (req, res) => {
-    const { email, password } = req.body;
+  const { email, password } = req.body;
 
-    try {
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: "Invalid credentials" });
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
-
-        // Require email verification for regular users, but allow admins to login immediately.
-        if (!user.isVerified && !user.isAdmin)
-            return res.status(400).json({ message: "Email not verified. Please check your email and verify your account." });
-
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-        res.json({
-            token,
-            user: {
-              id: user._id,
-              name: user.name,
-              email: user.email,
-              isAdmin: user.isAdmin,
-            },
-        });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+  try {
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
     }
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
+
+    if (!user.isVerified)
+      return res.status(400).json({ message: "Email not verified. Please check your email and verify your account." });
+
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
+    res.json({ token, user: { name: user.name, email: user.email, isAdmin: user.isAdmin } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 // ---------------- Verify Email ----------------
 exports.verifyEmail = async (req, res) => {
-    const { token } = req.params;
+  const { token } = req.params;
 
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        await User.findByIdAndUpdate(decoded.id, { isVerified: true });
-        res.send("Email verified! You can now log in.");
-    } catch (err) {
-        res.status(400).send("Invalid or expired token");
-    }
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    await User.findByIdAndUpdate(decoded.id, { isVerified: true });
+    res.send("Email verified! You can now log in.");
+  } catch (err) {
+    res.status(400).send("Invalid or expired token");
+  }
 };
 exports.forgotPasswordController = async (req, res) => {
   const { email } = req.body;
@@ -140,8 +131,8 @@ exports.resetPasswordController = async (req, res) => {
   try {
     // Validate password
     if (!password || password.length < 6) {
-      return res.status(400).json({ 
-        message: "Password must be at least 6 characters long" 
+      return res.status(400).json({
+        message: "Password must be at least 6 characters long"
       });
     }
 
@@ -161,8 +152,8 @@ exports.resetPasswordController = async (req, res) => {
     user.password = hashedPassword;
     await user.save();
 
-    res.json({ 
-      message: "Password reset successfully. You can now log in." 
+    res.json({
+      message: "Password reset successfully. You can now log in."
     });
 
   } catch (err) {

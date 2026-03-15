@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { UserPlus, Pizza, ShieldCheck } from "lucide-react";
+import { UserPlus, Pizza } from "lucide-react";
 import api from "../api";
 
 export default function Register() {
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "", isAdmin: false });
+  const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -21,11 +21,10 @@ export default function Register() {
         name: form.name,
         email: form.email,
         password: form.password,
-        isAdmin: form.isAdmin,
       });
 
       alert(data.message); 
-      setForm({ name: "", email: "", password: "", confirm: "", isAdmin: false });
+      setForm({ name: "", email: "", password: "", confirm: "" });
     } catch (err) {
       alert(err.response?.data?.message || "Registration failed");
     } finally {
@@ -100,21 +99,6 @@ export default function Register() {
               className="glass-input w-full"
             />
           </div>
-          
-          <label className="flex items-center gap-3 p-3 rounded-xl bg-white/60 border border-slate-200 cursor-pointer hover:bg-white transition-colors shadow-sm">
-            <input 
-              type="checkbox" 
-              checked={form.isAdmin} 
-              onChange={e => setForm({ ...form, isAdmin: e.target.checked })}
-              className="w-5 h-5 accent-pizza-red rounded border-slate-300" 
-            />
-            <div className="flex flex-col">
-              <span className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                Register as Admin <ShieldCheck className="w-4 h-4 text-pizza-red" />
-              </span>
-              <span className="text-xs font-medium text-slate-500">For demonstration purposes only</span>
-            </div>
-          </label>
 
           <button 
             type="submit" 
