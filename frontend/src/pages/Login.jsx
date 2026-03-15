@@ -7,6 +7,9 @@ import api from "../api";
 export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendMessage, setResendMessage] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -22,9 +25,29 @@ export default function Login() {
         navigate("/dashboard");
       }
     } catch (err) {
-      alert(err.response?.data?.message || "Login failed");
+      const message = err.response?.data?.message || "Login failed";
+      if (message.toLowerCase().includes("email not verified")) {
+        setVerifyError(message);
+      } else {
+        setVerifyError("");
+      }
+      alert(message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResendMessage("");
+    setResendLoading(true);
+
+    try {
+      const { data } = await api.post("/auth/resend-verification", { email: form.email });
+      setResendMessage(data.message || "Verification email sent.");
+    } catch (err) {
+      setResendMessage(err.response?.data?.message || "Unable to resend verification email.");
+    } finally {
+      setResendLoading(false);
     }
   };
 
@@ -93,6 +116,23 @@ export default function Login() {
             {!loading && <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /> }
           </button>
         </form>
+
+        {verifyError && (
+          <div className="mt-4 p-4 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800">
+            <p className="font-medium">{verifyError}</p>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resendLoading}
+              className="mt-2 inline-flex items-center justify-center rounded-md bg-pizza-red px-3 py-2 text-sm font-semibold text-white hover:bg-pizza-orange disabled:opacity-50"
+            >
+              {resendLoading ? "Resending..." : "Resend verification email"}
+            </button>
+            {resendMessage && (
+              <p className="mt-2 text-sm text-slate-600">{resendMessage}</p>
+            )}
+          </div>
+        )}
 
         <div className="mt-8 text-center border-t border-slate-200/60 pt-6">
           <p className="text-slate-500 font-medium">

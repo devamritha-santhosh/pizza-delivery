@@ -5,6 +5,10 @@ const {
   sendVerificationEmail,
   sendResetPasswordEmail
 } = require("../utils/mailer.js");
+
+// Make frontend URL configurable for email links
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+
 // ---------------- Registration ----------------
 exports.register = async (req, res) => {
   const { name, email, password } = req.body; // remove isAdmin from frontend
@@ -40,8 +44,8 @@ exports.register = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Send verification email
-    const verificationLink = `http://localhost:5173/verify/${verificationToken}`;
+    // Send verification email (link points to frontend verify page)
+    const verificationLink = `${FRONTEND_URL}/verify/${verificationToken}`;
     await sendVerificationEmail(user.email, verificationLink);
 
     res.status(201).json({
@@ -73,6 +77,39 @@ exports.login = async (req, res) => {
 
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
     res.json({ token, user: { name: user.name, email: user.email, isAdmin: user.isAdmin } });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// ---------------- Resend Verification ----------------
+exports.resendVerification = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    if (!email) {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "User not found" });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ message: "Email is already verified" });
+    }
+
+    const verificationToken = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1d" }
+    );
+
+    const verificationLink = `${FRONTEND_URL}/verify/${verificationToken}`;
+    await sendVerificationEmail(user.email, verificationLink);
+
+    res.json({ message: "Verification email sent", verificationLink });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -111,7 +148,7 @@ exports.forgotPasswordController = async (req, res) => {
       { expiresIn: "15m" }
     );
 
-    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    const resetLink = `${FRONTEND_URL}/reset-password/${resetToken}`;
 
     // Send email with reset token
     await sendResetPasswordEmail(user.email, resetLink);

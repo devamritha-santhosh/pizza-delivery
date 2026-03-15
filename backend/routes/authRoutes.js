@@ -3,6 +3,7 @@ const {
   register,
   login,
   verifyEmail,
+  resendVerification,
   forgotPasswordController,
   resetPasswordController,
 } = require("../controllers/authController");
@@ -12,6 +13,9 @@ router.post("/register", register);
 
 // User login
 router.post("/login", login);
+
+// Resend verification email (if user didn't receive the first one)
+router.post("/resend-verification", resendVerification);
 
 // Email verification
 router.get("/verify/:token", verifyEmail);
